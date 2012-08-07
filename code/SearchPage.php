@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * SearchPage_Controller is a stand-alone page for searching products,
+ * reachable by default at yoursite.com/search.
+ * 
+ * Pass a 'search' get parameter in the url to perform the search.
+ * 
+ */
 class SearchPage_Controller extends Page_Controller{
 	
 	static $url_segment = "search";
@@ -74,7 +81,6 @@ class SearchPage_Controller extends Page_Controller{
 			$morelink = $link."&page=".($page+1);
 			$results->pop();
 		}
-
 
 		return array(
 			'Phrase' => Convert::raw2xml($phrase),
