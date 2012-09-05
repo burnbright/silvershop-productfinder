@@ -19,6 +19,10 @@ class SearchPage_Controller extends Page_Controller{
 	
 	static $url_segment = "search";
 	
+	function Title(){
+		return _t("SearchPage.TITLE","Search");
+	}
+	
 	function Link($action = null){
 		if($this->isInDB()){
 			return parent::Link($action);
