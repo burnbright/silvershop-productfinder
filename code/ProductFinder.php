@@ -73,15 +73,54 @@ class ProductFinder extends Page_Controller{
 	}
 	
 	protected function query($phrase){
-		$query = singleton("Product")->extendedSQL(); //get base query
-		//TODO: get from live only
-		//TODO: join with categories
-		if($philters = $this->phraseFilters($phrase)){
-			$query->where("(".implode(" OR ",$philters).")");
+		
+		$phrasewords = explode(" ",$phrase);
+		$SQL_matchphrase = "".implode("* ",$phrasewords)."*";
+		$query = singleton("Product")->extendedSQL(); //get base query (_Live)
+		if(!empty($phrase) && $fields = $this->matchFields()){
+			
+			$scoresum = array();
+			//give weight to match fields, based on order
+			$maxstrength  = count($fields);
+			foreach($fields as $weight => $field){
+				$strength = (count($fields) - $weight);
+				$query->select[] = "(MATCH($field) AGAINST ('$phrase' IN BOOLEAN MODE)) * $maxstrength AS \"Relevance{$weight}_exact\"";
+				$query->select[] = "(MATCH($field) AGAINST ('$SQL_matchphrase' IN BOOLEAN MODE)) * $strength AS \"Relevance{$weight}\"";
+				$scoresum[] = "\"Relevance{$weight}\" + \"Relevance{$weight}_exact\""; //exact match gets priority
+			}
+			/*
+			//give weight to order of words in phrase
+			foreach($phrasewords as $weight => $word){
+				$query->select[] = "MATCH(".implode(",",$fields).") AGAINST ('+$word*' IN BOOLEAN MODE) AS \"Relevance{$weight}\"";
+				$scoresum[] = "\"Relevance{$weight}\" * ".(1 + (count($fields) - $weight + 1) * 0.1);
+			}*/
+			$likes = array();
+			foreach($fields as $field){
+				foreach($phrasewords as $word){
+					$likes[] = $field." LIKE '%$word%'";
+				}
+			}
+			$query->where("(".implode(" OR ",$likes).")");			
+			$query->orderby(
+				implode(" + ",$scoresum)." DESC",
+				array("sort" => "NumberSold", "dir" => "ASC"),
+				array("sort" => "SiteTree_Live.Created", "dir" => "DESC")
+			);
+		}else{
+			$query->orderby(
+				array("sort" => "NumberSold", "dir" => "ASC"),
+				array("sort" => "SiteTree_Live.Created", "dir" => "DESC")
+			);
 		}
 		$query->where("\"SiteTree_Live\".\"ShowInSearch\" = 1");
-		$query->orderby("\"NumberSold\" ASC, \"SiteTree_Live\".\"Created\" DESC");
+		$query->groupby("Product_Live.ID");
 		return $query;
+	}
+	
+	protected function matchFields(){
+		return array(
+			"SiteTree_Live.Title"	
+		);
 	}
 	
 	protected function phraseFilters($phrase){
