@@ -103,7 +103,7 @@ class ProductFinder extends Page_Controller{
 			$query->where("(".implode(" OR ",$likes).")");			
 			$query->orderby(
 				implode(" + ",$scoresum)." DESC",
-				array("sort" => "Popularity", "dir" => "ASC"),
+				array("sort" => "Popularity", "dir" => "DESC"),
 				array("sort" => "SiteTree_Live.Created", "dir" => "DESC")
 			);
 		}else{
