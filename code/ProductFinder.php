@@ -74,6 +74,7 @@ class ProductFinder extends Page_Controller{
 	
 	protected function query($phrase){
 		
+		$phrase = Convert::raw2sql($phrase); //prevent sql injection
 		$phrasewords = explode(" ",$phrase);
 		$SQL_matchphrase = "".implode("* ",$phrasewords)."*";
 		$query = singleton("Product")->extendedSQL(); //get base query (_Live)
