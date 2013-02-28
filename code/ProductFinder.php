@@ -18,6 +18,7 @@
 class ProductFinder extends Page_Controller{
 	
 	static $url_segment = "products";
+	protected $sorter = null;
 	
 	function Title(){
 		return _t("ProductFinder.TITLE","Products");
@@ -30,9 +31,41 @@ class ProductFinder extends Page_Controller{
 		return Controller::join_links(self::$url_segment,$action);
 	}
 	
+	function getSorter(){
+		if($this->sorter){
+			return $this->sorter;
+		}
+		$sorter =  new SortControl($this->class.$this->ID);
+		$sorter->addSort("Relevance","Relevance", array(
+			//Relevance sort is added additionally below
+			"Popularity" => "DESC",
+			"Created" => "DESC"
+		));
+		$sorter->addSort("Popularity","Most Popular", array(
+			"Popularity" => "DESC",
+			"Created" => "DESC"
+		));
+		$sorter->addSort("Alphabetical","Alphabetical", array(
+			"Title" => "ASC",
+			"Created" => "DESC"
+		));
+		$sorter->addSort("Newest","Newest", array(
+			"Created" => "DESC"
+		));
+		$sorter->addSort("LowPrice","Lowest Price", array(
+			"BasePrice" => "ASC"
+		));
+		$sorter->addSort("HighPrice","Highest Price", array(
+			"BasePrice" => "DESC"
+		));
+		return $this->sorter = $sorter;
+	}
+	
 	function Form(){
 		$query = $this->request->getVar("search");
-		$fields = new FieldSet(new TextField("search","",$query));
+		$fields = new FieldSet(
+			new TextField("search","",$query)
+		);
 		$actions = new FieldSet($searchaction = new FormAction("index","Search"));
 		$searchaction->setFullAction(null);
 		$form = new Form($this,"SearchForm",$fields,$actions);
@@ -73,13 +106,12 @@ class ProductFinder extends Page_Controller{
 	}
 	
 	protected function query($phrase){
-		
 		$phrase = Convert::raw2sql($phrase); //prevent sql injection
 		$phrasewords = explode(" ",$phrase);
 		$SQL_matchphrase = "".implode("* ",$phrasewords)."*";
-		$query = singleton("Product")->extendedSQL(); //get base query (_Live)
+		$query = singleton("Product")->extendedSQL(); //get base query (_Live)	
+		$orderby = $this->getSorter()->getSortSQL();
 		if(!empty($phrase) && $fields = $this->matchFields()){
-			
 			$scoresum = array();
 			//give weight to match fields, based on order
 			$maxstrength  = count($fields);
@@ -101,18 +133,13 @@ class ProductFinder extends Page_Controller{
 					$likes[] = $field." LIKE '%$word%'";
 				}
 			}
-			$query->where("(".implode(" OR ",$likes).")");			
-			$query->orderby(
-				implode(" + ",$scoresum)." DESC",
-				array("sort" => "Popularity", "dir" => "DESC"),
-				array("sort" => "SiteTree_Live.Created", "dir" => "DESC")
-			);
-		}else{
-			$query->orderby(
-				array("sort" => "Popularity", "dir" => "DESC"),
-				array("sort" => "SiteTree_Live.Created", "dir" => "DESC")
-			);
+			$query->where("(".implode(" OR ",$likes).")");
+			if($this->getSorter()->getSortName() == "Relevance"){
+				$orderby = implode(" + ",$scoresum)." DESC, ".$orderby;
+			}
 		}
+		$query->orderby($orderby);
+		
 		$query->where("\"SiteTree_Live\".\"ShowInSearch\" = 1");
 		$query->groupby("Product_Live.ID");
 		return $query;
@@ -132,6 +159,22 @@ class ProductFinder extends Page_Controller{
 		return array(
 			"LOWER(\"SiteTree_Live\".\"Title\") LIKE '%$phrase%'"
 		);
+	}
+	
+	function SortForm(){
+		$fields = new FieldSet(
+			new DropdownField("sort","",$this->getSorter()->getSortOptions(),$this->getSorter()->getSortName())
+		);
+		$actions = new FieldSet(
+			$setsort = new FormAction("setSort","Update Sort")
+		);
+		$setsort->addExtraClass("btn btn-primary");
+		return new Form($this,"SortForm",$fields,$actions);
+	}
+	
+	function setSort($data, $form){
+		$this->getSorter()->setSort($data['sort']);
+		$this->redirectBack();
 	}
 	
 }
