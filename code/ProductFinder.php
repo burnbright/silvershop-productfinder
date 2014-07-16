@@ -32,41 +32,22 @@ class ProductFinder extends Page_Controller{
 	}
 	
 	function getSorter(){
-		if($this->sorter){
-			return $this->sorter;
-		}
-		$sorter =  new SortControl($this->class.$this->ID);
-		$sorter->addSort("Relevance","Relevance", array(
-			//Relevance sort is added additionally below
-			"Popularity" => "DESC",
-			"Created" => "DESC"
-		));
-		$sorter->addSort("Popularity","Most Popular", array(
-			"Popularity" => "DESC",
-			"Created" => "DESC"
-		));
-		$sorter->addSort("Alphabetical","Alphabetical", array(
-			"Title" => "ASC",
-			"Created" => "DESC"
-		));
-		$sorter->addSort("Newest","Newest", array(
-			"Created" => "DESC"
-		));
-		$sorter->addSort("LowPrice","Lowest Price", array(
-			"BasePrice" => "ASC"
-		));
-		$sorter->addSort("HighPrice","Highest Price", array(
-			"BasePrice" => "DESC"
-		));
-		return $this->sorter = $sorter;
+		$sorts = array(
+			//TODO: relevance
+			'Popularity' => 'Date',
+			'Title' => 'Alphabetical',
+			'Created' => 'Newest',
+			'BasePrice' => 'Price'
+		);
+		return new ListSorter($this->request,$sorts);
 	}
 	
 	function Form(){
 		$query = $this->request->getVar("search");
-		$fields = new FieldSet(
+		$fields = new FieldList(
 			new TextField("search","",$query)
 		);
-		$actions = new FieldSet($searchaction = new FormAction("index","Search"));
+		$actions = new FieldList($searchaction = new FormAction("index","Search"));
 		$searchaction->setFullAction(null);
 		$form = new Form($this,"SearchForm",$fields,$actions);
 		$form->setFormAction($this->Link());
@@ -77,56 +58,38 @@ class ProductFinder extends Page_Controller{
 	
 	function index(){
 		$phrase = $this->request->getVar('search');
-		$start = (int)$this->request->getVar('start');
 		return array(
 			'Phrase' => $phrase,
-			'Products' => $this->results($phrase, $start)
+			'Products' => $this->results($phrase)
 		);
 	}
 	
-	protected function results($phrase = null, $start = 0){
-		$length = 16;
-		$query = $this->query($phrase);
-		$count = $query->unlimitedRowCount();
-		if(!$count){ //don't bother building result set, if there are none
-			return null;
-		}
-		$query->limit("$start, $length");
-		$products = $this->queryToSet($query);
-		$products->Start = $start + 1;
-		$products->TotalSize = $count;
-		$products->setPageLimits($start, $length, $count);
+	protected function results($phrase = null){
+		$products = new DataList("Product");
+		$products = $products->setDataQuery($this->query($phrase)); 
+		$products = $this->getSorter()->sortList($products);
+		$products = new PaginatedList($products, $this->request);
+
 		return $products;
-	}
-	
-	protected function queryToSet($query){		
-		$results = $query->execute();
-		$set = singleton("Product")->buildDataObjectSet($results);
-		return $set;
 	}
 	
 	protected function query($phrase){
 		$phrase = Convert::raw2sql($phrase); //prevent sql injection
-		$phrasewords = explode(" ",$phrase);
-		$SQL_matchphrase = "".implode("* ",$phrasewords)."*";
-		$query = singleton("Product")->extendedSQL(); //get base query (_Live)	
-		$orderby = $this->getSorter()->getSortSQL();
+		$query = Product::get()
+			->filter("ShowInSearch", true)
+			->dataQuery();
 		if(!empty($phrase) && $fields = $this->matchFields()){
 			$scoresum = array();
-			//give weight to match fields, based on order
+			$phrasewords = explode(" ", $phrase);
 			$maxstrength  = count($fields);
+			$SQL_matchphrase = "".implode("* ",$phrasewords)."*";
 			foreach($fields as $weight => $field){
+				//TODO: get this working
 				$strength = (count($fields) - $weight);
 				$query->select[] = "(MATCH($field) AGAINST ('$phrase' IN BOOLEAN MODE)) * $maxstrength AS \"Relevance{$weight}_exact\"";
 				$query->select[] = "(MATCH($field) AGAINST ('$SQL_matchphrase' IN BOOLEAN MODE)) * $strength AS \"Relevance{$weight}\"";
 				$scoresum[] = "\"Relevance{$weight}\" + \"Relevance{$weight}_exact\""; //exact match gets priority
 			}
-			/*
-			//give weight to order of words in phrase
-			foreach($phrasewords as $weight => $word){
-				$query->select[] = "MATCH(".implode(",",$fields).") AGAINST ('+$word*' IN BOOLEAN MODE) AS \"Relevance{$weight}\"";
-				$scoresum[] = "\"Relevance{$weight}\" * ".(1 + (count($fields) - $weight + 1) * 0.1);
-			}*/
 			$likes = array();
 			foreach($fields as $field){
 				foreach($phrasewords as $word){
@@ -134,14 +97,8 @@ class ProductFinder extends Page_Controller{
 				}
 			}
 			$query->where("(".implode(" OR ",$likes).")");
-			if($this->getSorter()->getSortName() == "Relevance"){
-				$orderby = implode(" + ",$scoresum)." DESC, ".$orderby;
-			}
 		}
-		$query->orderby($orderby);
-		
-		$query->where("\"SiteTree_Live\".\"ShowInSearch\" = 1");
-		$query->groupby("Product_Live.ID");
+
 		return $query;
 	}
 	
@@ -159,22 +116,6 @@ class ProductFinder extends Page_Controller{
 		return array(
 			"LOWER(\"SiteTree_Live\".\"Title\") LIKE '%$phrase%'"
 		);
-	}
-	
-	function SortForm(){
-		$fields = new FieldSet(
-			new DropdownField("sort","",$this->getSorter()->getSortOptions(),$this->getSorter()->getSortName())
-		);
-		$actions = new FieldSet(
-			$setsort = new FormAction("setSort","Update Sort")
-		);
-		$setsort->addExtraClass("btn btn-primary");
-		return new Form($this,"SortForm",$fields,$actions);
-	}
-	
-	function setSort($data, $form){
-		$this->getSorter()->setSort($data['sort']);
-		$this->redirectBack();
 	}
 	
 }
