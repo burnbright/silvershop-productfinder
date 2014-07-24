@@ -18,6 +18,6 @@
 		"burnbright/silverstripe-shop": "*"
 	},
 	"extra" : {
-		"installer-name": "shop_discount"
+		"installer-name": "shop_productfinder"
     }
 }
