@@ -69,6 +69,7 @@ class ProductFinder extends Page_Controller{
 		$products = $products->setDataQuery($this->query($phrase)); 
 		$products = $this->getSorter()->sortList($products);
 		$products = new PaginatedList($products, $this->request);
+		$products->setPageLength(16);
 
 		return $products;
 	}
