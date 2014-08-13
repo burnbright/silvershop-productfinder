@@ -18,7 +18,6 @@
 class ProductFinder extends Page_Controller{
 	
 	static $url_segment = "products";
-	protected $sorter = null;
 	
 	function Title(){
 		return _t("ProductFinder.TITLE","Products");
@@ -33,11 +32,10 @@ class ProductFinder extends Page_Controller{
 	
 	function getSorter(){
 		$sorts = array(
-			//TODO: relevance
-			'Popularity' => 'Date',
+			'Popularity' => 'Popularity',
 			'Title' => 'Alphabetical',
-			'Created' => 'Newest',
-			'BasePrice' => 'Price'
+			'Created' => 'Age',
+			//'Price' => 'Price' //hard to calculate
 		);
 		return new ListSorter($this->request,$sorts);
 	}
