@@ -37,7 +37,7 @@ class ProductFinder extends Page_Controller{
 			'Created' => 'Age',
 			//'Price' => 'Price' //hard to calculate
 		);
-		return new ListSorter($this->request,$sorts);
+		return new ListSorter($this->request, $sorts);
 	}
 	
 	function Form(){
@@ -64,7 +64,8 @@ class ProductFinder extends Page_Controller{
 	
 	protected function results($phrase = null){
 		$products = new DataList("Product");
-		$products = $products->setDataQuery($this->query($phrase)); 
+		$products = $products->setDataQuery($this->query($phrase))
+						->sort("Popularity", "DESC"); 
 		$products = $this->getSorter()->sortList($products);
 		$products = new PaginatedList($products, $this->request);
 		$products->setPageLength(16);
