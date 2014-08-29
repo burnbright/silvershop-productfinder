@@ -15,7 +15,8 @@
 	"require" : {
 		"silverstripe/cms": "~3.1",
 		"silverstripe/framework": "~3.1",
-		"burnbright/silverstripe-shop": "*"
+		"burnbright/silverstripe-shop": "*",
+		"burnbright/silverstripe-listsorter": "~2.0"
 	},
 	"extra" : {
 		"installer-name": "shop_productfinder"

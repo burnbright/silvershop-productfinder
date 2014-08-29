@@ -32,12 +32,18 @@ class ProductFinder extends Page_Controller{
 	
 	function getSorter(){
 		$sorts = array(
-			'Popularity' => 'Popularity',
-			'Title' => 'Alphabetical',
-			'Created' => 'Age',
-			//'Price' => 'Price' //hard to calculate
+			'Most Popular' => 'Popularity DESC',
+			ListSorter_Option::create('Title (A - Z)', "Title ASC",
+				ListSorter_Option::create('Title (Z - A)', "Title DESC")
+					->setID("title desc")
+			)->setID("title asc"),
+			ListSorter_Option::create('Newest', "Created DESC",
+				ListSorter_Option::create('Oldest', "Created ASC")
+			)
 		);
-		return new ListSorter($this->request, $sorts);
+		$sorter = new ListSorter($this->request, $sorts);
+		$this->extend('updateSorter', $sorter);
+		return $sorter;
 	}
 	
 	function Form(){
