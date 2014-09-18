@@ -29,6 +29,16 @@ class ProductFinder extends Page_Controller{
 		}
 		return Controller::join_links(self::$url_segment,$action);
 	}
+
+	/**
+	 * Allow this controller to be viewed when the site is in draft mode.
+	 */
+	function init(){
+		$draftsecurity = Session::get('unsecuredDraftSite');
+		Session::set("unsecuredDraftSite", true);
+		parent::init();
+		Session::set("unsecuredDraftSite", $draftsecurity);
+	}
 	
 	function getSorter(){
 		$sorts = array(
@@ -107,7 +117,7 @@ class ProductFinder extends Page_Controller{
 
 		return $query;
 	}
-	
+
 	protected function matchFields(){
 		return array(
 			"SiteTree_Live.Title"	
