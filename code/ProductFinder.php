@@ -119,8 +119,9 @@ class ProductFinder extends Page_Controller{
 	}
 
 	protected function matchFields(){
+		$stage = Versioned::current_stage() === "Stage" ? "" : "_Live";
 		return array(
-			"SiteTree_Live.Title"	
+			"SiteTree{$stage}.Title"	
 		);
 	}
 	
@@ -129,8 +130,9 @@ class ProductFinder extends Page_Controller{
 		if(empty($phrase)){
 			return null;
 		}
+		$stage = Versioned::current_stage() === "Stage" ? "" : "_Live";
 		return array(
-			"LOWER(\"SiteTree_Live\".\"Title\") LIKE '%$phrase%'"
+			"LOWER(\"SiteTree{$stage}\".\"Title\") LIKE '%$phrase%'"
 		);
 	}
 	
