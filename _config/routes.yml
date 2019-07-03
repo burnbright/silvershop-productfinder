@@ -1,0 +1,7 @@
+---
+Name: shop_productfinder_routes
+After: shoproutes
+---
+Director:
+  rules:
+    'browse': 'ProductFinder'

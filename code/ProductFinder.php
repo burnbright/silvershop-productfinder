@@ -96,7 +96,10 @@ class ProductFinder extends Page_Controller
 
         return $products;
     }
-    
+	
+	/**
+	 * @return DataQuery
+	 */
     protected function query($phrase)
     {
         $phrase = Convert::raw2sql($phrase); //prevent sql injection
@@ -123,9 +126,8 @@ class ProductFinder extends Page_Controller
             }
             $query->where("(".implode(" OR ", $likes).")");
         }
-
-        return $query;
-    }
+		return $query;
+	}
 
     protected function matchFields()
     {
