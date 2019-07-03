@@ -2,9 +2,9 @@
 /**
  * ProductFinder is a stand-alone page for searching and filtering products,
  * reachable by default at yoursite.com/search.
- * 
+ *
  * Pass a 'search' get parameter in the url to perform the search.
- * 
+ *
  * TODO:
  * 	sort results by popularity, newest
  * 	choose number of results
@@ -13,11 +13,10 @@
  * 	search module
  * 		fuzzy search
  * 		mispelling
- * 
+ *
  */
 class ProductFinder extends Page_Controller
 {
-    
     public static $url_segment = "products";
     
     public function Title()
@@ -48,11 +47,15 @@ class ProductFinder extends Page_Controller
     {
         $sorts = array(
             'Most Popular' => 'Popularity DESC',
-            ListSorter_Option::create('Title (A - Z)', "Title ASC",
+            ListSorter_Option::create(
+                'Title (A - Z)',
+                "Title ASC",
                 ListSorter_Option::create('Title (Z - A)', "Title DESC")
                     ->setID("title desc")
             )->setID("title asc"),
-            ListSorter_Option::create('Newest', "Created DESC",
+            ListSorter_Option::create(
+                'Newest',
+                "Created DESC",
                 ListSorter_Option::create('Oldest', "Created ASC")
             )
         );
@@ -96,10 +99,10 @@ class ProductFinder extends Page_Controller
 
         return $products;
     }
-	
-	/**
-	 * @return DataQuery
-	 */
+    
+    /**
+     * @return DataQuery
+     */
     protected function query($phrase)
     {
         $phrase = Convert::raw2sql($phrase); //prevent sql injection
@@ -126,8 +129,8 @@ class ProductFinder extends Page_Controller
             }
             $query->where("(".implode(" OR ", $likes).")");
         }
-		return $query;
-	}
+        return $query;
+    }
 
     protected function matchFields()
     {
