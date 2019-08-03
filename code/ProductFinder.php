@@ -19,6 +19,10 @@ class ProductFinder extends Page_Controller
 {
     public static $url_segment = "products";
     
+    protected $templates = array(
+        "index" => array("ProductFinder", "Page")
+    );
+    
     public function Title()
     {
         return _t("ProductFinder.TITLE", "Products");
