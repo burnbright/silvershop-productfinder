@@ -1,5 +1,5 @@
 {
-	"name" : "burnbright/silverstripe-shop-productfinder",
+	"name" : "burnbright/silvershop-productfinder",
 	"description" : "Single controler for finding products.",
 	"license" : "BSD-2-Clause",
 	"type" : "silverstripe-module",
@@ -15,10 +15,13 @@
 	"require" : {
 		"silverstripe/cms": "~3.1",
 		"silverstripe/framework": "~3.1",
-		"burnbright/silverstripe-shop": "*",
+		"silvershop/core": "*",
 		"burnbright/silverstripe-listsorter": "~2.0"
 	},
+	"replace": {
+		"burnbright/silverstripe-shop-productfinder": "*"
+	},
 	"extra" : {
-		"installer-name": "shop_productfinder"
-    }
+		"installer-name": "silvershop-productfinder"
+	}
 }
