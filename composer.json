@@ -1,6 +1,6 @@
 {
 	"name" : "burnbright/silvershop-productfinder",
-	"description" : "Single controler for finding products.",
+	"description" : "A controller for finding products.",
 	"license" : "BSD-2-Clause",
 	"type" : "silverstripe-module",
 	"keywords" : ["silverstripe","shop","productfinder","search"],
